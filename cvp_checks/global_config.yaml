@@ -1,0 +1,15 @@
+---
+# MANDATORY: Credentials for Salt master
+#SALT_URL: <salt_url> 
+#SALT_USERNAME: <salt_usr>
+#SALT_PASSWORD: <salt_pwd>
+
+# List of nodes to skip in tests
+skipped_nodes: []
+
+# ntp test setting
+time_deviation: 30
+
+# mtu test setting
+# mask for interfaces to skip
+skipped_ifaces: ["bonding_masters", "lo", "veth", "tap", "cali"]
