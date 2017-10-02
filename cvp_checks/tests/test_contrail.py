@@ -2,14 +2,19 @@ import pytest
 import json
 
 def test_contrail_compute_status(local_salt_client):
+    probe = local_salt_client.cmd(
+        'opencontrail:control', 'cmd.run',
+        ['contrail-status | grep -Pv \'(==|^$|Disk|unix|support)\''],
+        expr_form='pillar'
+    )
+    if not probe:
+        pytest.skip("Contrail is not found on this environment")
+
     cs = local_salt_client.cmd(
         'nova:compute', 'cmd.run',
         ['contrail-status | grep -Pv \'(==|^$)\''],
         expr_form='pillar'
     )
-    # TODO: what if compute lacks these service unintentionally?
-    if not cs:
-        pytest.skip("Contrail services were not found on compute nodes")
     broken_services = []
 
     for node in cs:
@@ -38,7 +43,7 @@ def test_contrail_node_status(local_salt_client):
         expr_form='pillar')
     )
     if not cs:
-        pytest.skip("Contrail nodes were not found on compute nodes")
+        pytest.skip("Contrail is not found on this environment")
     broken_services = []
     for node in cs:
         for line in cs[node].split('\n'):
@@ -58,6 +63,13 @@ def test_contrail_node_status(local_salt_client):
 
 
 def test_contrail_vrouter_count(local_salt_client):
+    probe = local_salt_client.cmd(
+        'opencontrail:control', 'cmd.run',
+        ['contrail-status | grep -Pv \'(==|^$|Disk|unix|support)\''],
+        expr_form='pillar'
+    )
+    if not probe:
+        pytest.skip("Contrail is not found on this environment")
     cs = local_salt_client.cmd(
         'nova:compute', 'cmd.run', ['contrail-status | grep -Pv \'(==|^$)\''],
         expr_form='pillar'
