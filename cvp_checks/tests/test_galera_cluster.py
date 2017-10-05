@@ -5,6 +5,9 @@ def test_galera_cluster_status(local_salt_client):
         ['salt-call mysql.status | grep -A1 wsrep_cluster_size | tail -n1'],
         expr_form='pillar')
 
+    if not gs:
+        pytest.skip("Galera is not found on this environment")
+
     size_cluster = []
     amount = len(gs)
 
