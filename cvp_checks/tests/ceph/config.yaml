@@ -1,3 +1,0 @@
----
-ceph_monitors: ['ceph-003*', 'ceph-004*', 'ceph-005*']
-ceph_osd_probe_node: ['ceph-001*']

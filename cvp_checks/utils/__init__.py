@@ -5,14 +5,14 @@ import re
 
 
 class salt_remote:
-    def cmd(self, tgt, fun, param=None,expr_form=None):
+    def cmd(self, tgt, fun, param=None,expr_form=None,tgt_type=None):
         config = get_configuration(__file__)
         for salt_cred in ['SALT_USERNAME', 'SALT_PASSWORD', 'SALT_URL']:
             if os.environ.get(salt_cred):
                 config[salt_cred] = os.environ[salt_cred]
         headers = {'Accept':'application/json'}
         login_payload = {'username':config['SALT_USERNAME'],'password':config['SALT_PASSWORD'],'eauth':'pam'}
-        accept_key_payload = {'fun': fun,'tgt':tgt,'client':'local','expr_form':expr_form}
+        accept_key_payload = {'fun': fun,'tgt':tgt,'client':'local','expr_form':expr_form,'tgt_type':tgt_type}
         if param:
             accept_key_payload['arg']=param
 
@@ -73,29 +73,6 @@ def get_groups(config):
                              ' invalid groups name: {}'.format(invalid_groups))
 
     groups = test_groups if test_groups else groups
-
-    # For splitting Ceph nodes
-    local_salt_client = init_salt_client()
-
-    if "ceph*" in groups:
-        groups.remove("ceph*")
-
-        ceph_status = local_salt_client.cmd(
-            'ceph*', "cmd.run", ["ps aux | grep ceph-mon | grep -v grep"])
-
-        mon = []
-        ceph = []
-        for node in ceph_status:
-            if ceph_status[node] != '':
-                mon.append(node.split('.')[0])
-            else:
-                ceph.append(node.split('.')[0])
-
-        mon_regex = "({0}.*)".format(".*|".join(mon))
-        groups.append(mon_regex)
-
-        ceph_regex = "({0}.*)".format(".*|".join(ceph))
-        groups.append(ceph_regex)
 
     return groups
 
