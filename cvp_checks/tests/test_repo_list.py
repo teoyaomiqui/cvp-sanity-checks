@@ -16,15 +16,15 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
         ['cat /etc/apt/sources.list.d/*;'
          'cat /etc/apt/sources.list|grep deb|grep -v "#"'],
         expr_form='pcre')
-    actual_repo_list = [item.replace('/ ', ' ')
+    actual_repo_list = [item.replace('/ ', ' ').replace('[arch=amd64] ','')
                         for item in raw_actual_info.values()[0].split('\n')]
-    expected_salt_data = [repo['source'].replace('/ ', ' ')
+    expected_salt_data = [repo['source'].replace('/ ', ' ').replace('[arch=amd64] ','')
                           for repo in info_salt.values()[0]
                           ['linux:system:repo'].values()]
 
     diff = {}
     my_set = set()
-
+    fail_counter = 0
     my_set.update(actual_repo_list)
     my_set.update(expected_salt_data)
     import json
@@ -34,10 +34,13 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
             rows.append("{}: {}".format("pillars", "+"))
             rows.append("{}: No repo".format('config'))
             diff[repo] = rows
+            fail_counter += 1
         elif repo not in expected_salt_data:
             rows.append("{}: {}".format("config", "+"))
             rows.append("{}: No repo".format('pillars'))
             diff[repo] = rows
-    assert len(diff) <= 1, \
+    assert fail_counter == 0, \
         "Several problems found for {0} group: {1}".format(
         group, json.dumps(diff, indent=4))
+    if fail_counter == 0 and len(diff) > 0:
+        print "\nWarning: nodes contain more repos than reclass"
