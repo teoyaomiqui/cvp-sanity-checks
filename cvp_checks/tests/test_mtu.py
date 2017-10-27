@@ -1,14 +1,17 @@
 import pytest
 import json
 from cvp_checks import utils
+import os
 
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(utils.get_configuration(__file__))
+    utils.get_groups(os.path.basename(__file__))
 )
 def test_mtu(local_salt_client, group):
-    config = utils.get_configuration(__file__)
+    if "skipped" in group:
+        pytest.skip("skipped in config")
+    config = utils.get_configuration()
     skipped_ifaces = config["skipped_ifaces"]
     total = {}
     network_info = local_salt_client.cmd(

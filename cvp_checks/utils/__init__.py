@@ -2,14 +2,11 @@ import os
 import yaml
 import requests
 import re
-
+import pytest
 
 class salt_remote:
     def cmd(self, tgt, fun, param=None,expr_form=None,tgt_type=None):
-        config = get_configuration(__file__)
-        for salt_cred in ['SALT_USERNAME', 'SALT_PASSWORD', 'SALT_URL']:
-            if os.environ.get(salt_cred):
-                config[salt_cred] = os.environ[salt_cred]
+        config = get_configuration()
         headers = {'Accept':'application/json'}
         login_payload = {'username':config['SALT_USERNAME'],'password':config['SALT_PASSWORD'],'eauth':'pam'}
         accept_key_payload = {'fun': fun,'tgt':tgt,'client':'local','expr_form':expr_form,'tgt_type':tgt_type}
@@ -26,25 +23,47 @@ def init_salt_client():
     return local
 
 
-def get_active_nodes(config):
+def list_to_target_string(node_list, separator):
+    result = ''
+    for node in node_list:
+        result += node + ' ' + separator + ' '
+    return result.strip(' ' + separator + ' ')
+
+
+def get_active_nodes(test=None):
+    config = get_configuration()
     local_salt_client = init_salt_client()
 
     skipped_nodes = config.get('skipped_nodes') or []
-    # TODO add skipped nodes to cmd command instead of filtering
-    nodes = local_salt_client.cmd('*', 'test.ping')
-    active_nodes = [
-        node_name for node_name in nodes
-        if nodes[node_name] and node_name not in skipped_nodes
-    ]
-    return active_nodes
+    if test:
+        testname = test.split('.')[0]
+        if 'skipped_nodes' in config.get(testname).keys():
+            skipped_nodes += config.get(testname)['skipped_nodes'] or []
+
+    if skipped_nodes:
+        print "\nNotice: {0} nodes will be skipped".format(skipped_nodes)
+        nodes = local_salt_client.cmd(
+        '* and not '+list_to_target_string(skipped_nodes, 'and not'),
+        'test.ping',
+        expr_form='compound')
+    else:
+        nodes = local_salt_client.cmd('*', 'test.ping')
+    return nodes
 
 
-def get_groups(config):
+def get_groups(test):
+    config = get_configuration()
+    testname = test.split('.')[0]
     # assume that node name is like <name>.domain
     # last 1-3 digits of name are index, e.g. 001 in cpu001
     # name doesn't contain dots
-    active_nodes = get_active_nodes(config)
-    skipped_group = config.get('skipped_group') or []
+    active_nodes = get_active_nodes()
+
+    skipped_groups = config.get('skipped_groups') or []
+    if config.get(testname):
+        if 'skipped_groups' in config.get(testname).keys():
+            skipped_groups += config.get(testname)['skipped_groups'] or []
+
     groups = []
 
     for node in active_nodes:
@@ -53,44 +72,30 @@ def get_groups(config):
             group_name = node.split('.')[0][:-len(index.group(0))]
         else:
             group_name = node
-        if group_name not in skipped_group and group_name not in groups:
-            groups.append(group_name)
-    test_groups = []
-    groups_from_config = config.get('groups')
-    # check if config.yaml contains `groups` key
-    if groups_from_config is not None:
-        invalid_groups = []
-        for group in groups_from_config:
-            # check if group name from config
-            # is substring of one of the groups
-            grp = [x for x in groups if group in x]
-            if grp:
-                test_groups.append(grp[0])
+        if group_name not in groups:
+            if group_name not in skipped_groups:
+                groups.append(group_name)
             else:
-                invalid_groups.append(group)
-        if invalid_groups:
-            raise ValueError('Config file contains'
-                             ' invalid groups name: {}'.format(invalid_groups))
-
-    groups = test_groups if test_groups else groups
+                if group_name+" - skipped" not in groups:
+                    groups.append(group_name+" - skipped")
 
     return groups
 
 
-def get_configuration(path_to_test):
+def get_configuration():
     """function returns configuration for environment
-
     and for test if it's specified"""
     global_config_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "../global_config.yaml")
     with open(global_config_file, 'r') as file:
         global_config = yaml.load(file)
-
-    config_file = os.path.join(
-        os.path.dirname(os.path.abspath(path_to_test)), "config.yaml")
-
-    if os.path.exists(config_file):
-        with open(config_file, 'r') as file:
-            global_config.update(yaml.load(file))
+    for param in global_config.keys():
+        if param in os.environ.keys():
+            if ',' in os.environ[param]:
+                global_config[param]=[]
+                for item in os.environ[param].split(','):
+                    global_config[param].append(item)
+            else:
+                global_config[param]=os.environ[param]
 
     return global_config

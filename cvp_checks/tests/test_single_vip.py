@@ -1,13 +1,16 @@
 import pytest
 from cvp_checks import utils
+import os
 from collections import Counter
 
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(utils.get_configuration(__file__))
+    utils.get_groups(os.path.basename(__file__))
 )
 def test_single_vip(local_salt_client, group):
+    if "skipped" in group:
+        pytest.skip("skipped in config")
     local_salt_client.cmd(group, 'saltutil.sync_all', expr_form='pcre')
     nodes_list = local_salt_client.cmd(
         group, 'grains.item', ['ipv4'], expr_form='pcre')

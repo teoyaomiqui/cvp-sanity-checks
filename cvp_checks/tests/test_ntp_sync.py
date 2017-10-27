@@ -1,21 +1,25 @@
 from cvp_checks import utils
+import os
 
 
 def test_ntp_sync(local_salt_client):
-    config = utils.get_configuration(__file__)
+    testname = os.path.basename(__file__).split('.')[0]
+    active_nodes = utils.get_active_nodes(os.path.basename(__file__))
+    config = utils.get_configuration()
     fail = {}
     saltmaster_time = int(local_salt_client.cmd(
         'salt:master',
         'cmd.run',
         ['date +%s'],
         expr_form='pillar').values()[0])
-
     nodes_time = local_salt_client.cmd(
-        '*', 'cmd.run', ['date +%s'])
-
+        utils.list_to_target_string(active_nodes, 'or'),
+        'cmd.run',
+        ['date +%s'],
+        expr_form='compound')
     for node, time in nodes_time.iteritems():
-        if (int(time) - saltmaster_time) > config["time_deviation"] or \
-                (int(time) - saltmaster_time) < -config["time_deviation"]:
+        if (int(time) - saltmaster_time) > config.get(testname)["time_deviation"] or \
+                (int(time) - saltmaster_time) < -config.get(testname)["time_deviation"]:
             fail[node] = time
 
     assert not fail, 'SaltMaster time: {}\n' \

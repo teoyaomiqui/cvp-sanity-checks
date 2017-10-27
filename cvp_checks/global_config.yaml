@@ -1,14 +1,25 @@
 ---
 # MANDATORY: Credentials for Salt master
-#SALT_URL: <salt_url> 
-#SALT_USERNAME: <salt_usr>
-#SALT_PASSWORD: <salt_pwd>
+SALT_URL: <salt_url>
+SALT_USERNAME: <salt_usr>
+SALT_PASSWORD: <salt_pwd>
 
-# List of nodes to skip in tests
-skipped_nodes: []
+# List of nodes (full fqdn) to skip in all tests
+# TEMPORARY: please do not comment this setting.
+skipped_nodes: [""]
+
+# List of groups (short name, e.g. dbs) to skip in group tests
+# TEMPORARY: please do not comment this setting.
+skipped_groups: [""]
+
+# Some tests may skip groups
+#test_mtu: {"skipped_groups": ["dbs"]}
 
 # ntp test setting
-time_deviation: 30
+# this test may skip specific node (use fqdn)
+test_ntp_sync:
+  { #"skipped_nodes": [""],
+    "time_deviation": 30}
 
 # mtu test setting
 # mask for interfaces to skip

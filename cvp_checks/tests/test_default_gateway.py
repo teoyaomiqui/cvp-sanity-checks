@@ -1,15 +1,16 @@
 import json
 import pytest
-
+import os
 from cvp_checks import utils
 
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(utils.get_configuration(__file__))
+    utils.get_groups(os.path.basename(__file__))
 )
 def test_check_default_gateways(local_salt_client, group):
-    config = utils.get_configuration(__file__)
+    if "skipped" in group:
+        pytest.skip("skipped in config")
     netstat_info = local_salt_client.cmd(
         group, 'cmd.run', ['ip r | sed -n 1p'], expr_form='pcre')
 

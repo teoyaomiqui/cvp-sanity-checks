@@ -1,15 +1,16 @@
 import pytest
 import json
+import os
 from cvp_checks import utils
 
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(utils.get_configuration(__file__))
+    utils.get_groups(os.path.basename(__file__))
 )
 def test_check_package_versions(local_salt_client, group):
-    config = utils.get_configuration(__file__)
-
+    if "skipped" in group:
+        pytest.skip("skipped in config")
     output = local_salt_client.cmd(group, 'lowpkg.list_pkgs', expr_form='pcre')
 
     if len(output.keys()) < 2:
@@ -43,11 +44,11 @@ def test_check_package_versions(local_salt_client, group):
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(utils.get_configuration(__file__))
+    utils.get_groups(os.path.basename(__file__))
 )
 def test_check_module_versions(local_salt_client, group):
-    config = utils.get_configuration(__file__)
-
+    if "skipped" in group:
+        pytest.skip("skipped in config")
     pre_check = local_salt_client.cmd(
         group, 'cmd.run', ['dpkg -l | grep "python-pip "'], expr_form='pcre')
     if pre_check.values().count('') > 0:

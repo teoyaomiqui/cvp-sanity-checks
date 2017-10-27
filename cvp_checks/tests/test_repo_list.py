@@ -1,12 +1,15 @@
 import pytest
+import os
 from cvp_checks import utils
 
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(utils.get_configuration(__file__))
+    utils.get_groups(os.path.basename(__file__))
 )
 def test_list_of_repo_on_nodes(local_salt_client, group):
+    if "skipped" in group:
+        pytest.skip("skipped in config")
     info_salt = local_salt_client.cmd(
         group, 'pillar.data', ['linux:system:repo'], expr_form='pcre')
 
