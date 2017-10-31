@@ -40,11 +40,19 @@ or
    # vim cvp_checks/global_config.yaml
 ```
 SALT credentials are mandatory for tests.
+
+
 Other settings are optional (please keep uncommented with default values)
+
+
 Alternatively, you can specify these settings via env variables:
+```bash
 export SALT_URL=http://10.0.0.1:6969
+```
 For array-type settings please do:
+```bash
 export skipped_nodes='ctl01.example.com,ctl02.example.com'
+```
 
 5) Start tests:
 ```bash 

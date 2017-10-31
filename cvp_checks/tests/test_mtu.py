@@ -9,10 +9,12 @@ import os
     utils.get_groups(os.path.basename(__file__))
 )
 def test_mtu(local_salt_client, group):
+    testname = os.path.basename(__file__).split('.')[0]
     if "skipped" in group:
         pytest.skip("skipped in config")
     config = utils.get_configuration()
-    skipped_ifaces = config["skipped_ifaces"]
+    skipped_ifaces = config.get(testname)["skipped_ifaces"] or \
+        ["bonding_masters", "lo", "veth", "tap", "cali"]
     total = {}
     network_info = local_salt_client.cmd(
         group, 'cmd.run', ['ls /sys/class/net/'], expr_form='pcre')
@@ -68,4 +70,3 @@ def test_mtu(local_salt_client, group):
     assert len(mtu_data) == 0, \
         "Several problems found for {0} group: {1}".format(
         group, json.dumps(mtu_data, indent=4))
-

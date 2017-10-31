@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_galera_cluster_status(local_salt_client):
     gs = local_salt_client.cmd(
         'galera:*',

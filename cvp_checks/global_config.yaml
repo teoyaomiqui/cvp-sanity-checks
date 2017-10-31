@@ -12,15 +12,15 @@ skipped_nodes: [""]
 # TEMPORARY: please do not comment this setting.
 skipped_groups: [""]
 
-# Some tests may skip groups
-#test_mtu: {"skipped_groups": ["dbs"]}
+# mtu test setting
+# this test may skip groups (see example)
+test_mtu:
+  { #"skipped_groups": ["dbs"]
+    "skipped_ifaces": ["bonding_masters", "lo", "veth", "tap", "cali"]}
+# mask for interfaces to skip
 
 # ntp test setting
 # this test may skip specific node (use fqdn)
 test_ntp_sync:
   { #"skipped_nodes": [""],
     "time_deviation": 30}
-
-# mtu test setting
-# mask for interfaces to skip
-skipped_ifaces: ["bonding_masters", "lo", "veth", "tap", "cali"]

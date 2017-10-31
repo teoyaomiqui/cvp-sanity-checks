@@ -8,9 +8,9 @@ def test_ceph_haproxy(local_salt_client):
     monitor_info = local_salt_client.cmd(
         'ceph:mon',
         'cmd.run',
-       ["echo 'show stat' | nc -U "
-        "/var/run/haproxy/admin.sock | "
-        "grep ceph_mon_radosgw_cluster"],
+        ["echo 'show stat' | nc -U "
+         "/var/run/haproxy/admin.sock | "
+         "grep ceph_mon_radosgw_cluster"],
         expr_form='pillar')
     if not monitor_info:
         pytest.skip("Ceph is not found on this environment")

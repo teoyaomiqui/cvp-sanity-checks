@@ -1,6 +1,3 @@
-import re
-
-
 def test_checking_rabbitmq_cluster(local_salt_client):
     # disable config for this test
     # it may be reintroduced in future

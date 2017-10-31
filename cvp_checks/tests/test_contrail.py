@@ -1,6 +1,7 @@
 import pytest
 import json
 
+
 def test_contrail_compute_status(local_salt_client):
     probe = local_salt_client.cmd(
         'opencontrail:control', 'cmd.run',
@@ -51,7 +52,7 @@ def test_contrail_node_status(local_salt_client):
             if 'crashes/core.java.' not in line:
                 name, status = line.split(None, 1)
             else:
-                name, status = line,'FATAL'
+                name, status = line, 'FATAL'
             if status not in {'active', 'backup'}:
                 err_msg = "{node}:{service} - {status}".format(
                     node=node, service=name, status=status)

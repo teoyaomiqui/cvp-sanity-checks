@@ -19,9 +19,10 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
         ['cat /etc/apt/sources.list.d/*;'
          'cat /etc/apt/sources.list|grep deb|grep -v "#"'],
         expr_form='pcre')
-    actual_repo_list = [item.replace('/ ', ' ').replace('[arch=amd64] ','')
+    actual_repo_list = [item.replace('/ ', ' ').replace('[arch=amd64] ', '')
                         for item in raw_actual_info.values()[0].split('\n')]
-    expected_salt_data = [repo['source'].replace('/ ', ' ').replace('[arch=amd64] ','')
+    expected_salt_data = [repo['source'].replace('/ ', ' ')
+                                        .replace('[arch=amd64] ', '')
                           for repo in info_salt.values()[0]
                           ['linux:system:repo'].values()]
 
@@ -44,6 +45,6 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
             diff[repo] = rows
     assert fail_counter == 0, \
         "Several problems found for {0} group: {1}".format(
-        group, json.dumps(diff, indent=4))
+            group, json.dumps(diff, indent=4))
     if fail_counter == 0 and len(diff) > 0:
         print "\nWarning: nodes contain more repos than reclass"
