@@ -36,6 +36,16 @@ def list_to_target_string(node_list, separator):
     return result.strip(' ' + separator + ' ')
 
 
+def get_monitoring_ip(param_name):
+    local_salt_client = init_salt_client()
+    salt_output = local_salt_client.cmd(
+        'docker:client:stack:monitoring',
+        'pillar.get',
+        ['_param:{}'.format(param_name)],
+        expr_form='pillar')
+    return salt_output[salt_output.keys()[0]]
+
+
 def get_active_nodes(test=None):
     config = get_configuration()
     local_salt_client = init_salt_client()
