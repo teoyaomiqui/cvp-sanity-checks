@@ -30,7 +30,7 @@ def test_stacklight_containers_status(local_salt_client):
         ['docker service ps $(docker stack services -q monitoring)'],
         expr_form='pillar')
     result = {}
-    for line in salt_output[salt_output.keys()[1]].split('\n')[1:]:
+    for line in salt_output[salt_output.keys()[0]].split('\n')[1:]:
         shift = 0
         if line.split()[1] == '\\_':
             shift = 1
