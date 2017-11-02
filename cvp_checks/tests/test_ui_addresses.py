@@ -6,7 +6,7 @@ def test_ui_horizon(local_salt_client):
     salt_output = local_salt_client.cmd(
         'horizon:server',
         'pillar.get',
-        ['_param:openstack_proxy_address'],
+        ['_param:cluster_public_host'],
         expr_form='pillar')
     IP = [salt_output[node] for node in salt_output
           if salt_output[node]]

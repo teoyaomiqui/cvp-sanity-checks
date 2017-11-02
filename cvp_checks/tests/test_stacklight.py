@@ -3,8 +3,14 @@ import requests
 
 
 def test_elasticsearch_cluster(local_salt_client):
-    assert requests.get('http://log:9200/').status_code == 200, \
-        'Cannot check elasticsearch url. Info:'
+    salt_output = local_salt_client.cmd(
+        'elasticsearch:client',
+        'pillar.get',
+        ['_param:haproxy_elasticsearch_bind_host'],
+        expr_form='pillar')
+    IP = salt_output[salt_output.keys()[0]]
+    assert requests.get('http://{}:9200/'.format(IP)).status_code == 200, \
+        'Cannot check elasticsearch url on {}.'.format(IP)
 
 
 def test_stacklight_services_replicas(local_salt_client):
@@ -32,6 +38,7 @@ def test_stacklight_containers_status(local_salt_client):
     result = {}
     for line in salt_output[salt_output.keys()[0]].split('\n')[1:]:
         shift = 0
+        print line
         if line.split()[1] == '\\_':
             shift = 1
         if line.split()[1 + shift] not in result.keys():
