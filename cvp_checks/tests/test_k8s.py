@@ -109,10 +109,33 @@ def test_k8s_kubelet_status(local_salt_client):
                        errors)
 
 
-def test_ping_host(local_salt_client):
+def test_k8s_check_system_pods_status(local_salt_client):
+    result = local_salt_client.cmd(
+        'etcd:server', 'cmd.run',
+        ['kubectl --namespace="kube-system" get pods'],
+        expr_form='pillar'
+    )
+    errors = []
+    if not result:
+        pytest.skip("k8s is not found on this environment")
+    for node in result:
+        for line in result[node].split('\n'):
+            line = line.strip('|')
+            if 'STATUS' in line or 'proto' in line:
+                continue
+            else:
+                if 'Running' not in line:
+                    errors.append(line)
+        break
+    assert not errors, 'Some system pods are not running: {}'.format(json.dumps(
+                                                                   errors,
+                                                                   indent=4))
+
+
+def test_check_k8s_image_availability(local_salt_client):
     # not a test actually
-    hostname = 'docker-dev-virtual.docker.mirantis.net'
-    response = os.system('ping -c 1 ' + hostname)
+    hostname = 'https://docker-dev-virtual.docker.mirantis.net/artifactory/webapp/'
+    response = os.system('curl -s --insecure {} > /dev/null'.format(hostname))
     if response == 0:
         print '{} is AVAILABLE'.format(hostname)
     else:
