@@ -8,9 +8,26 @@ def test_elasticsearch_cluster(local_salt_client):
         'pillar.get',
         ['_param:haproxy_elasticsearch_bind_host'],
         expr_form='pillar')
-    IP = salt_output[salt_output.keys()[0]]
-    assert requests.get('http://{}:9200/'.format(IP)).status_code == 200, \
-        'Cannot check elasticsearch url on {}.'.format(IP)
+    for node in salt_output.keys():
+        IP = salt_output[node]
+        assert requests.get('http://{}:9200/'.format(IP)).status_code == 200, \
+            'Cannot check elasticsearch url on {}.'.format(IP)
+        resp = requests.get('http://{}:9200/_cat/health'.format(IP)).content
+        assert resp.split()[3] == 'green', \
+            'elasticsearch status is not good {}'.format(
+                                                json.dumps(resp, indent=4))
+        assert resp.split()[4] == '3', \
+            'elasticsearch status is not good {}'.format(
+                                                json.dumps(resp, indent=4))
+        assert resp.split()[5] == '3', \
+            'elasticsearch status is not good {}'.format(
+                                                json.dumps(resp, indent=4))
+        assert resp.split()[10] == '0', \
+            'elasticsearch status is not good {}'.format(
+                                                json.dumps(resp, indent=4))
+        assert resp.split()[13] == '100.0', \
+            'elasticsearch status is not good {}'.format(
+                                                json.dumps(resp, indent=4))
 
 
 def test_stacklight_services_replicas(local_salt_client):
@@ -38,7 +55,6 @@ def test_stacklight_containers_status(local_salt_client):
     result = {}
     for line in salt_output[salt_output.keys()[0]].split('\n')[1:]:
         shift = 0
-        print line
         if line.split()[1] == '\\_':
             shift = 1
         if line.split()[1 + shift] not in result.keys():
