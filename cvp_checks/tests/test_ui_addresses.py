@@ -51,7 +51,7 @@ def test_ui_alert_manager(local_salt_client):
     result = local_salt_client.cmd(
         'keystone:server',
         'cmd.run',
-        ['curl http://{}:15011/ 2>&1 | grep AlertManager'.format(IP)],
+        ['curl -s http://{}:15011/ | grep Alertmanager'.format(IP)],
         expr_form='pillar')
     assert len(result[result.keys()[0]]) != 0, \
         'AlertManager page is not reachable on {} from ctl nodes'.format(IP)

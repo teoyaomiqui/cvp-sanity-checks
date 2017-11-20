@@ -25,7 +25,7 @@ def test_elasticsearch_cluster(local_salt_client):
         assert resp.split()[10] == '0', \
             'elasticsearch status is not good {}'.format(
                                                 json.dumps(resp, indent=4))
-        assert resp.split()[13] == '100.0', \
+        assert resp.split()[13] == '100.0%', \
             'elasticsearch status is not good {}'.format(
                                                 json.dumps(resp, indent=4))
 
