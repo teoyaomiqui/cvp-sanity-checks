@@ -21,6 +21,11 @@ def test_contrail_compute_status(local_salt_client):
     for node in cs:
         for line in cs[node].split('\n'):
             line = line.strip()
+            if len (line.split(None, 1)) == 1:
+                err_msg = "{0}: {1}".format(
+                    node, line)
+                broken_services.append(err_msg)
+                continue
             name, status = line.split(None, 1)
             if status not in {'active'}:
                 err_msg = "{node}:{service} - {status}".format(
