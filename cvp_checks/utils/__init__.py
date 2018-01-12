@@ -11,7 +11,8 @@ class salt_remote:
         login_payload = {'username': config['SALT_USERNAME'],
                          'password': config['SALT_PASSWORD'], 'eauth': 'pam'}
         accept_key_payload = {'fun': fun, 'tgt': tgt, 'client': 'local',
-                              'expr_form': expr_form, 'tgt_type': tgt_type}
+                              'expr_form': expr_form, 'tgt_type': tgt_type,
+                              'timeout': config['salt_timeout']}
         if param:
             accept_key_payload['arg'] = param
 
