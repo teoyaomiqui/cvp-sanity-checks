@@ -1,5 +1,4 @@
 import pytest
-import os
 from cvp_checks import utils
 
 
@@ -8,11 +7,10 @@ from cvp_checks import utils
     utils.node_groups.keys()
 )
 def test_list_of_repo_on_nodes(local_salt_client, group):
-    if "skipped" in group:
-        pytest.skip("skipped in config")
-    info_salt = local_salt_client.cmd(
-        "L@"+','.join(utils.node_groups[group]), 'pillar.data', ['linux:system:repo'], expr_form='compound')
-
+    info_salt = local_salt_client.cmd('L@' + ','.join(
+                                      utils.node_groups[group]),
+                                      'pillar.data', ['linux:system:repo'],
+                                      expr_form='compound')
     raw_actual_info = local_salt_client.cmd(
         group,
         'cmd.run',
@@ -24,7 +22,8 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
     expected_salt_data = [repo['source'].replace('/ ', ' ')
                                         .replace('[arch=amd64] ', '')
                           for repo in info_salt.values()[0]
-                          ['linux:system:repo'].values()]
+                          ['linux:system:repo'].values()
+                          if 'source' in repo.keys()]
 
     diff = {}
     my_set = set()
