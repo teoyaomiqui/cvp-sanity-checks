@@ -19,11 +19,14 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
         expr_form='pcre')
     actual_repo_list = [item.replace('/ ', ' ').replace('[arch=amd64] ', '')
                         for item in raw_actual_info.values()[0].split('\n')]
-    expected_salt_data = [repo['source'].replace('/ ', ' ')
-                                        .replace('[arch=amd64] ', '')
-                          for repo in info_salt.values()[0]
-                          ['linux:system:repo'].values()
-                          if 'source' in repo.keys()]
+    if info_salt.values()[0]['linux:system:repo'] == '':
+        expected_salt_data = ''
+    else:
+        expected_salt_data = [repo['source'].replace('/ ', ' ')
+                                            .replace('[arch=amd64] ', '')
+                              for repo in info_salt.values()[0]
+                              ['linux:system:repo'].values()
+                              if 'source' in repo.keys()]
 
     diff = {}
     my_set = set()
