@@ -16,19 +16,19 @@ def test_elasticsearch_cluster(local_salt_client):
         resp = requests.get('http://{}:9200/_cat/health'.format(IP)).content
         assert resp.split()[3] == 'green', \
             'elasticsearch status is not good {}'.format(
-                                                json.dumps(resp, indent=4))
+            json.dumps(resp, indent=4))
         assert resp.split()[4] == '3', \
             'elasticsearch status is not good {}'.format(
-                                                json.dumps(resp, indent=4))
+            json.dumps(resp, indent=4))
         assert resp.split()[5] == '3', \
             'elasticsearch status is not good {}'.format(
-                                                json.dumps(resp, indent=4))
+            json.dumps(resp, indent=4))
         assert resp.split()[10] == '0', \
             'elasticsearch status is not good {}'.format(
-                                                json.dumps(resp, indent=4))
+            json.dumps(resp, indent=4))
         assert resp.split()[13] == '100.0%', \
             'elasticsearch status is not good {}'.format(
-                                                json.dumps(resp, indent=4))
+            json.dumps(resp, indent=4))
 
 
 def test_stacklight_services_replicas(local_salt_client):
@@ -52,13 +52,16 @@ def test_prometheus_alert_count(local_salt_client):
     # keystone:server can return 3 nodes instead of 1
     # this will be fixed later
     # TODO
-    result = local_salt_client.cmd(
+    nodes_info = local_salt_client.cmd(
         'keystone:server',
         'cmd.run',
-        ['curl -s http://{}:15010/alerts | grep icon-chevron-down | grep -v "0 active"'.format(IP)],
+        ['curl -s http://{}:15010/alerts | grep icon-chevron-down | '
+         'grep -v "0 active"'.format(IP)],
         expr_form='pillar')
-    assert result[result.keys()[0]] == '', \
-        'AlertManager page has some alerts! {}'.format(json.dumps(result[result.keys()[0]], indent=4))
+    result = nodes_info[nodes_info.keys()[0]].replace('</td>', '').replace(
+        '<td><i class="icon-chevron-down"></i> <b>', '').replace('</b>', '')
+    assert result == '', 'AlertManager page has some alerts! {}'.format(
+                         json.dumps(result), indent=4)
 
 
 def test_stacklight_containers_status(local_salt_client):
