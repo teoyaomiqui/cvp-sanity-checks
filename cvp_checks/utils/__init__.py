@@ -40,7 +40,7 @@ def list_to_target_string(node_list, separator):
     result = ''
     for node in node_list:
         result += node + ' ' + separator + ' '
-    return result.strip(' ' + separator + ' ')
+    return result[:-(len(separator)+2)]
 
 
 def get_monitoring_ip(param_name):
@@ -62,7 +62,6 @@ def get_active_nodes(test=None):
         testname = test.split('.')[0]
         if 'skipped_nodes' in config.get(testname).keys():
             skipped_nodes += config.get(testname)['skipped_nodes'] or []
-
     if skipped_nodes != ['']:
         print "\nNotice: {0} nodes will be skipped".format(skipped_nodes)
         nodes = local_salt_client.cmd(

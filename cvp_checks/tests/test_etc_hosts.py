@@ -1,12 +1,15 @@
 import pytest
 import json
+import os
+from cvp_checks import utils
 
 
 def test_etc_hosts(local_salt_client):
+    active_nodes = utils.get_active_nodes()
     nodes_info = local_salt_client.cmd(
-        '*', 'cmd.run',
-        ['cat /etc/hosts']
-    )
+        utils.list_to_target_string(active_nodes, 'or'), 'cmd.run',
+        ['cat /etc/hosts'],
+        expr_form='compound')
     result = {}
     for node in nodes_info.keys():
         for nd in nodes_info.keys():
