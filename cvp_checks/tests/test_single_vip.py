@@ -6,12 +6,10 @@ from collections import Counter
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(os.path.basename(__file__))
+    utils.node_groups.keys()
 )
 def test_single_vip(local_salt_client, group):
-    if "skipped" in group:
-        pytest.skip("skipped in config")
-    local_salt_client.cmd(group, 'saltutil.sync_all', expr_form='pcre')
+    local_salt_client.cmd("L@"+','.join(utils.node_groups[group]), 'saltutil.sync_all', expr_form='compound')
     nodes_list = local_salt_client.cmd(
         group, 'grains.item', ['ipv4'], expr_form='pcre')
 

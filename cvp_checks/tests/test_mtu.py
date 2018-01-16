@@ -6,18 +6,16 @@ import os
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(os.path.basename(__file__))
+    utils.node_groups.keys()
 )
 def test_mtu(local_salt_client, group):
     testname = os.path.basename(__file__).split('.')[0]
-    if "skipped" in group:
-        pytest.skip("skipped in config")
     config = utils.get_configuration()
     skipped_ifaces = config.get(testname)["skipped_ifaces"] or \
         ["bonding_masters", "lo", "veth", "tap", "cali"]
     total = {}
     network_info = local_salt_client.cmd(
-        group, 'cmd.run', ['ls /sys/class/net/'], expr_form='pcre')
+        "L@"+','.join(utils.node_groups[group]), 'cmd.run', ['ls /sys/class/net/'], expr_form='compound')
 
     kvm_nodes = local_salt_client.cmd(
         'salt:control', 'test.ping', expr_form='pillar').keys()

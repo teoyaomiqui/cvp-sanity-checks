@@ -6,12 +6,10 @@ from cvp_checks import utils
 
 @pytest.mark.parametrize(
     "group",
-    utils.get_groups(os.path.basename(__file__))
+    utils.node_groups.keys()
 )
 def test_check_services(local_salt_client, group):
-    if "skipped" in group:
-        pytest.skip("skipped in config")
-    output = local_salt_client.cmd(group, 'service.get_all', expr_form='pcre')
+    output = local_salt_client.cmd("L@"+','.join(utils.node_groups[group]), 'service.get_all', expr_form='compound')
 
     if len(output.keys()) < 2:
         pytest.skip("Nothing to compare - only 1 node")

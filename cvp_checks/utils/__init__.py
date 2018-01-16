@@ -28,6 +28,9 @@ class salt_remote:
             raise EnvironmentError("401 Not authorized.")
 
 
+node_groups = {}
+
+
 def init_salt_client():
     local = salt_remote()
     return local
@@ -71,37 +74,39 @@ def get_active_nodes(test=None):
     return nodes
 
 
-def get_groups(test):
+def calculate_groups():
     config = get_configuration()
-    testname = test.split('.')[0]
-    # assume that node name is like <name>.domain
-    # last 1-3 digits of name are index, e.g. 001 in cpu001
-    # name doesn't contain dots
-    active_nodes = get_active_nodes()
-
-    skipped_groups = config.get('skipped_groups') or []
-    if config.get(testname):
-        if 'skipped_groups' in config.get(testname).keys():
-            skipped_groups += config.get(testname)['skipped_groups'] or []
-
-    groups = []
-
-    for node in active_nodes:
-        index = re.search('[0-9]{1,3}$', node.split('.')[0])
-        if index:
-            group_name = node.split('.')[0][:-len(index.group(0))]
-        else:
-            group_name = node
-        if group_name not in groups:
-            if group_name not in skipped_groups:
-                groups.append(group_name)
+    local_salt_client = init_salt_client()
+    nodes_names = set ()
+    expr_form = ''
+    if 'groups' in config.keys():
+        nodes_names.update(config['groups'].keys())
+        expr_form = 'pillar'
+    else:
+        nodes = local_salt_client.cmd('*', 'test.ping')
+        for node in nodes:
+            index = re.search('[0-9]{1,3}$', node.split('.')[0])
+            if index:
+                nodes_names.add(node.split('.')[0][:-len(index.group(0))])
             else:
-                if group_name + " - skipped" not in groups:
-                    groups.append(group_name + " - skipped")
+                nodes_names.add(node)
+        expr_form = 'pcre'
 
-    return groups
-
-
+    for node_name in nodes_names:
+        skipped_groups = config.get('skipped_groups') or []
+        if node_name in skipped_groups:
+            continue
+        if expr_form == 'pcre':
+            nodes = local_salt_client.cmd(node_name,
+                                          'test.ping',
+                                          expr_form=expr_form)
+        else:
+            nodes = local_salt_client.cmd(config['groups'][node_name],
+                                          'test.ping',
+                                          expr_form=expr_form)
+        node_groups[node_name]=[x for x in nodes if x not in config['skipped_nodes']]
+                
+            
 def get_configuration():
     """function returns configuration for environment
     and for test if it's specified"""
@@ -119,3 +124,6 @@ def get_configuration():
                 global_config[param] = os.environ[param]
 
     return global_config
+
+
+calculate_groups()
