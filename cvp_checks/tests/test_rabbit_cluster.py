@@ -6,7 +6,6 @@ def test_checking_rabbitmq_cluster(local_salt_client):
     rabbitmq_pillar_data = local_salt_client.cmd(
         'rabbitmq:server', 'pillar.data',
         ['rabbitmq:cluster'], expr_form='pillar')
-
     # creating dictionary {node:cluster_size_for_the_node}
     # with required cluster size for each node
     control_dict = {}
@@ -24,9 +23,9 @@ def test_checking_rabbitmq_cluster(local_salt_client):
     # find actual cluster size for each node
     for node in rabbit_actual_data:
         running_nodes_count = 0
-        for line in rabbit_actual_data[node].split('\n'):
-            if 'running_nodes' in line:
-                running_nodes_count = line.count('rabbit@')
+        # rabbitmqctl cluster_status output contains
+        # 3 * # of nodes 'rabbit@' entries + 1
+        running_nodes_count = (rabbit_actual_data[node].count('rabbit@') - 1)/3
         # update control dictionary with values
         # {node:actual_cluster_size_for_node}
         if required_cluster_size_dict[node] != running_nodes_count:
