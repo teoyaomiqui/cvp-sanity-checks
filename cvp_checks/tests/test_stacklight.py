@@ -1,5 +1,6 @@
 import json
 import requests
+from cvp_checks import utils
 
 
 def test_elasticsearch_cluster(local_salt_client):
@@ -46,6 +47,20 @@ def test_stacklight_services_replicas(local_salt_client):
               {}'''.format(json.dumps(wrong_items, indent=4))
 
 
+def test_prometheus_alert_count(local_salt_client):
+    IP = utils.get_monitoring_ip('cluster_public_host')
+    # keystone:server can return 3 nodes instead of 1
+    # this will be fixed later
+    # TODO
+    result = local_salt_client.cmd(
+        'keystone:server',
+        'cmd.run',
+        ['curl -s http://{}:15010/alerts | grep icon-chevron-down | grep -v "0 active"'.format(IP)],
+        expr_form='pillar')
+    assert result[result.keys()[0]] == '', \
+        'AlertManager page has some alerts! {}'.format(json.dumps(result[result.keys()[0]], indent=4))
+
+
 def test_stacklight_containers_status(local_salt_client):
     salt_output = local_salt_client.cmd(
         'docker:swarm:role:master',
@@ -53,6 +68,12 @@ def test_stacklight_containers_status(local_salt_client):
         ['docker service ps $(docker stack services -q monitoring)'],
         expr_form='pillar')
     result = {}
+    # for old reclass models, docker:swarm:role:master can return
+    # 2 nodes instead of one. Here is temporary fix.
+    # TODO
+    if len(salt_output.keys()) > 1:
+        if 'CURRENT STATE' not in salt_output[salt_output.keys()[0]]:
+            del salt_output[salt_output.keys()[0]]
     for line in salt_output[salt_output.keys()[0]].split('\n')[1:]:
         shift = 0
         if line.split()[1] == '\\_':
