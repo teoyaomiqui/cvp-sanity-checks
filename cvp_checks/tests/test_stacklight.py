@@ -1,5 +1,6 @@
 import json
 import requests
+import datetime
 from cvp_checks import utils
 
 
@@ -29,6 +30,27 @@ def test_elasticsearch_cluster(local_salt_client):
         assert resp.split()[13] == '100.0%', \
             'elasticsearch status is not good {}'.format(
             json.dumps(resp, indent=4))
+
+
+def test_elasticsearch_node_count(local_salt_client):
+    now = datetime.datetime.now()
+    today = now.strftime("%Y.%m.%d")
+    active_nodes = utils.get_active_nodes()
+    salt_output = local_salt_client.cmd(
+        'elasticsearch:client',
+        'pillar.get',
+        ['_param:haproxy_elasticsearch_bind_host'],
+        expr_form='pillar')
+    IP = salt_output.values()[0]
+    resp = requests.post('http://{0}:9200/log-{1}/_search?pretty'.
+                         format(IP, today), data='{"size": 500, "aggs": '
+                         '{"group_by_hostname": {"terms": {"size": 500, '
+                         '"field": "Hostname"}}}}').text
+    # TODO
+    # we should check every node in output, not simply # of entries
+    assert resp.count('"key"') > len(active_nodes), \
+        'Not all nodes are in Elasticsearch. Found {0} keys, ' \
+        'expected {1}.'.format(resp.count('"key"'), len(active_nodes))
 
 
 def test_stacklight_services_replicas(local_salt_client):
