@@ -6,7 +6,7 @@ from cvp_checks import utils
 
 def test_elasticsearch_cluster(local_salt_client):
     salt_output = local_salt_client.cmd(
-        'elasticsearch:client',
+        'kibana:server',
         'pillar.get',
         ['_param:haproxy_elasticsearch_bind_host'],
         expr_form='pillar')
@@ -37,7 +37,7 @@ def test_elasticsearch_node_count(local_salt_client):
     today = now.strftime("%Y.%m.%d")
     active_nodes = utils.get_active_nodes()
     salt_output = local_salt_client.cmd(
-        'elasticsearch:client',
+        'kibana:server',
         'pillar.get',
         ['_param:haproxy_elasticsearch_bind_host'],
         expr_form='pillar')
@@ -48,7 +48,7 @@ def test_elasticsearch_node_count(local_salt_client):
                          '"field": "Hostname"}}}}').text
     # TODO
     # we should check every node in output, not simply # of entries
-    assert resp.count('"key"') > len(active_nodes), \
+    assert resp.count('"key"') >= len(active_nodes), \
         'Not all nodes are in Elasticsearch. Found {0} keys, ' \
         'expected {1}.'.format(resp.count('"key"'), len(active_nodes))
 
