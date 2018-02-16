@@ -42,15 +42,28 @@ def test_elasticsearch_node_count(local_salt_client):
         ['_param:haproxy_elasticsearch_bind_host'],
         expr_form='pillar')
     IP = salt_output.values()[0]
-    resp = requests.post('http://{0}:9200/log-{1}/_search?pretty'.
-                         format(IP, today), data='{"size": 500, "aggs": '
-                         '{"group_by_hostname": {"terms": {"size": 500, '
-                         '"field": "Hostname"}}}}').text
-    # TODO
-    # we should check every node in output, not simply # of entries
-    assert resp.count('"key"') >= len(active_nodes), \
+    resp = json.loads(requests.post('http://{0}:9200/log-{1}/_search?pretty'.
+                                    format(IP, today),
+                                    data='{"size": 500, "aggs": '
+                                         '{"group_by_hostname": '
+                                         '{"terms": {"size": 500, '
+                                         '"field": "Hostname"}}}}').text)
+    cluster_domain = local_salt_client.cmd('salt:control',
+                                           'pillar.get',
+                                           ['_param:cluster_domain'],
+                                           expr_form='pillar').values()[0]
+    monitored_nodes = []
+    for item_ in resp['aggregations']['group_by_hostname']['buckets']:
+        node_name = item_['key']
+        monitored_nodes.append(node_name + '.' + cluster_domain)
+    missing_nodes = []
+    for node in active_nodes.keys():
+        if node not in monitored_nodes:
+            missing_nodes.append(node)
+    assert len(missing_nodes) == 0, \
         'Not all nodes are in Elasticsearch. Found {0} keys, ' \
-        'expected {1}.'.format(resp.count('"key"'), len(active_nodes))
+        'expected {1}. Missing nodes: \n{2}'. \
+            format(len(monitored_nodes), len(active_nodes), missing_nodes)
 
 
 def test_stacklight_services_replicas(local_salt_client):
