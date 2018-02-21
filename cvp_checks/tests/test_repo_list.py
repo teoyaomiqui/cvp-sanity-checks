@@ -11,6 +11,16 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
                                       utils.node_groups[group]),
                                       'pillar.data', ['linux:system:repo'],
                                       expr_form='compound')
+
+    # check if some repos are disabled
+    for node in info_salt.keys():
+        repos = info_salt[node]["linux:system:repo"]
+        for repo in repos.keys():
+            repository = repos[repo]
+            if "enabled" in repository:
+                if not repository["enabled"]:
+                    repos.pop(repo)
+
     raw_actual_info = local_salt_client.cmd(
         group,
         'cmd.run',
