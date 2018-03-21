@@ -44,16 +44,16 @@ def test_elasticsearch_node_count(local_salt_client):
     IP = salt_output.values()[0]
     resp = json.loads(requests.post('http://{0}:9200/log-{1}/_search?pretty'.
                                     format(IP, today),
-                                    data='{"size": 500, "aggs": '
-                                         '{"group_by_hostname": '
+                                    data='{"size": 0, "aggs": '
+                                         '{"uniq_hostname": '
                                          '{"terms": {"size": 500, '
-                                         '"field": "Hostname"}}}}').text)
+                                         '"field": "Hostname.keyword"}}}}').text)
     cluster_domain = local_salt_client.cmd('salt:control',
                                            'pillar.get',
                                            ['_param:cluster_domain'],
                                            expr_form='pillar').values()[0]
     monitored_nodes = []
-    for item_ in resp['aggregations']['group_by_hostname']['buckets']:
+    for item_ in resp['aggregations']['uniq_hostname']['buckets']:
         node_name = item_['key']
         monitored_nodes.append(node_name + '.' + cluster_domain)
     missing_nodes = []
