@@ -6,6 +6,10 @@ from cvp_checks import utils
 
 def test_check_package_versions(local_salt_client, nodes_in_group):
     output = local_salt_client.cmd("L@"+','.join(nodes_in_group), 'lowpkg.list_pkgs', expr_form='compound')
+    # Let's exclude cid01 and dbs01 nodes from this check
+    exclude_nodes = local_salt_client.cmd("I@galera:master or I@gerrit:client",
+                                          'test.ping',
+                                          expr_form='compound').keys()
 
     if len(output.keys()) < 2:
         pytest.skip("Nothing to compare - only 1 node")
@@ -15,6 +19,8 @@ def test_check_package_versions(local_salt_client, nodes_in_group):
     my_set = set()
 
     for node in output:
+        if node in exclude_nodes:
+            continue
         nodes.append(node)
         my_set.update(output[node].keys())
 
