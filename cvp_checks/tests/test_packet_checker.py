@@ -4,12 +4,8 @@ import os
 from cvp_checks import utils
 
 
-@pytest.mark.parametrize(
-    "group",
-    utils.node_groups.keys()
-)
-def test_check_package_versions(local_salt_client, group):
-    output = local_salt_client.cmd("L@"+','.join(utils.node_groups[group]), 'lowpkg.list_pkgs', expr_form='compound')
+def test_check_package_versions(local_salt_client, nodes_in_group):
+    output = local_salt_client.cmd("L@"+','.join(nodes_in_group), 'lowpkg.list_pkgs', expr_form='compound')
 
     if len(output.keys()) < 2:
         pytest.skip("Nothing to compare - only 1 node")
@@ -36,22 +32,18 @@ def test_check_package_versions(local_salt_client, group):
             row.insert(0, deb)
             pkts_data.append(row)
     assert len(pkts_data) <= 1, \
-        "Several problems found for {0} group: {1}".format(
-        group, json.dumps(pkts_data, indent=4))
+        "Several problems found: {1}".format(
+        json.dumps(pkts_data, indent=4))
 
 
-@pytest.mark.parametrize(
-    "group",
-    utils.node_groups.keys()
-)
-def test_check_module_versions(local_salt_client, group):
+def test_check_module_versions(local_salt_client, nodes_in_group):
     pre_check = local_salt_client.cmd(
-        "L@"+','.join(utils.node_groups[group]), 'cmd.run', ['dpkg -l | grep "python-pip "'], expr_form='compound')
+        "L@"+','.join(nodes_in_group), 'cmd.run', ['dpkg -l | grep "python-pip "'], expr_form='compound')
     if pre_check.values().count('') > 0:
         pytest.skip("pip is not installed on one or more nodes")
     if len(pre_check.keys()) < 2:
         pytest.skip("Nothing to compare - only 1 node")
-    output = local_salt_client.cmd("L@"+','.join(utils.node_groups[group]), 'pip.freeze', expr_form='compound')
+    output = local_salt_client.cmd("L@"+','.join(nodes_in_group), 'pip.freeze', expr_form='compound')
 
     nodes = []
     pkts_data = []
@@ -76,5 +68,5 @@ def test_check_module_versions(local_salt_client, group):
             row.insert(0, deb)
             pkts_data.append(row)
     assert len(pkts_data) <= 1, \
-        "Several problems found for {0} group: {1}".format(
-        group, json.dumps(pkts_data, indent=4))
+        "Several problems found: {1}".format(
+        json.dumps(pkts_data, indent=4))

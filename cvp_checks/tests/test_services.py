@@ -4,12 +4,8 @@ import os
 from cvp_checks import utils
 
 
-@pytest.mark.parametrize(
-    "group",
-    utils.node_groups.keys()
-)
-def test_check_services(local_salt_client, group):
-    output = local_salt_client.cmd("L@"+','.join(utils.node_groups[group]), 'service.get_all', expr_form='compound')
+def test_check_services(local_salt_client, nodes_in_group):
+    output = local_salt_client.cmd("L@"+','.join(nodes_in_group), 'service.get_all', expr_form='compound')
 
     if len(output.keys()) < 2:
         pytest.skip("Nothing to compare - only 1 node")
@@ -36,5 +32,5 @@ def test_check_services(local_salt_client, group):
             row.insert(0, srv)
             pkts_data.append(row)
     assert len(pkts_data) <= 1, \
-        "Several problems found for {0} group: {1}".format(
-        group, json.dumps(pkts_data, indent=4))
+        "Several problems found: {1}".format(
+        json.dumps(pkts_data, indent=4))

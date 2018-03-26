@@ -4,18 +4,14 @@ from cvp_checks import utils
 import os
 
 
-@pytest.mark.parametrize(
-    "group",
-    utils.node_groups.keys()
-)
-def test_mtu(local_salt_client, group):
+def test_mtu(local_salt_client, nodes_in_group):
     testname = os.path.basename(__file__).split('.')[0]
     config = utils.get_configuration()
     skipped_ifaces = config.get(testname)["skipped_ifaces"] or \
         ["bonding_masters", "lo", "veth", "tap", "cali"]
     total = {}
     network_info = local_salt_client.cmd(
-        "L@"+','.join(utils.node_groups[group]), 'cmd.run', ['ls /sys/class/net/'], expr_form='compound')
+        "L@"+','.join(nodes_in_group), 'cmd.run', ['ls /sys/class/net/'], expr_form='compound')
 
     kvm_nodes = local_salt_client.cmd(
         'salt:control', 'test.ping', expr_form='pillar').keys()
@@ -66,5 +62,5 @@ def test_mtu(local_salt_client, group):
             row.insert(0, interf)
             mtu_data.append(row)
     assert len(mtu_data) == 0, \
-        "Several problems found for {0} group: {1}".format(
-        group, json.dumps(mtu_data, indent=4))
+        "Several problems found: {1}".format(
+        json.dumps(mtu_data, indent=4))

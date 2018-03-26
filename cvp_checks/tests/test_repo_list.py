@@ -2,13 +2,9 @@ import pytest
 from cvp_checks import utils
 
 
-@pytest.mark.parametrize(
-    "group",
-    utils.node_groups.keys()
-)
-def test_list_of_repo_on_nodes(local_salt_client, group):
+def test_list_of_repo_on_nodes(local_salt_client, nodes_in_group):
     info_salt = local_salt_client.cmd('L@' + ','.join(
-                                      utils.node_groups[group]),
+                                      nodes_in_group),
                                       'pillar.data', ['linux:system:repo'],
                                       expr_form='compound')
 
@@ -22,11 +18,12 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
                     repos.pop(repo)
 
     raw_actual_info = local_salt_client.cmd(
-        group,
+        'L@' + ','.join(
+        nodes_in_group),
         'cmd.run',
         ['cat /etc/apt/sources.list.d/*;'
          'cat /etc/apt/sources.list|grep deb|grep -v "#"'],
-        expr_form='pcre')
+        expr_form='compound')
     actual_repo_list = [item.replace('/ ', ' ').replace('[arch=amd64] ', '')
                         for item in raw_actual_info.values()[0].split('\n')]
     if info_salt.values()[0]['linux:system:repo'] == '':
@@ -56,7 +53,7 @@ def test_list_of_repo_on_nodes(local_salt_client, group):
             rows.append("{}: No repo".format('pillars'))
             diff[repo] = rows
     assert fail_counter == 0, \
-        "Several problems found for {0} group: {1}".format(
-            group, json.dumps(diff, indent=4))
+        "Several problems found: {1}".format(
+            json.dumps(diff, indent=4))
     if fail_counter == 0 and len(diff) > 0:
         print "\nWarning: nodes contain more repos than reclass"

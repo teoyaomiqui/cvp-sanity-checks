@@ -4,14 +4,10 @@ import os
 from collections import Counter
 
 
-@pytest.mark.parametrize(
-    "group",
-    utils.node_groups.keys()
-)
-def test_single_vip(local_salt_client, group):
-    local_salt_client.cmd("L@"+','.join(utils.node_groups[group]), 'saltutil.sync_all', expr_form='compound')
+def test_single_vip(local_salt_client, nodes_in_group):
+    local_salt_client.cmd("L@"+','.join(nodes_in_group), 'saltutil.sync_all', expr_form='compound')
     nodes_list = local_salt_client.cmd(
-        group, 'grains.item', ['ipv4'], expr_form='pcre')
+        "L@"+','.join(nodes_in_group), 'grains.item', ['ipv4'], expr_form='compound')
 
     ipv4_list = []
 
@@ -25,4 +21,4 @@ def test_single_vip(local_salt_client, group):
             continue
         elif cnt[ip] > 1:
             assert "VIP IP duplicate found " \
-                   "in group {}\n{}".format(group, ipv4_list)
+                   "\n{}".format(ipv4_list)

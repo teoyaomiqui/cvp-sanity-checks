@@ -28,9 +28,6 @@ class salt_remote:
             raise EnvironmentError("401 Not authorized.")
 
 
-node_groups = {}
-
-
 def init_salt_client():
     local = salt_remote()
     return local
@@ -104,6 +101,7 @@ def calculate_groups():
                                           'test.ping',
                                           expr_form=expr_form)
         node_groups[node_name]=[x for x in nodes if x not in config['skipped_nodes']]
+    return node_groups
                 
             
 def get_configuration():
@@ -123,6 +121,3 @@ def get_configuration():
                 global_config[param] = os.environ[param]
 
     return global_config
-
-
-calculate_groups()
