@@ -73,6 +73,7 @@ def get_active_nodes(test=None):
 def calculate_groups():
     config = get_configuration()
     local_salt_client = init_salt_client()
+    node_groups = {}
     nodes_names = set ()
     expr_form = ''
     if 'groups' in config.keys():
