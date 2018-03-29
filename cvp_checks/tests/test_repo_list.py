@@ -53,7 +53,7 @@ def test_list_of_repo_on_nodes(local_salt_client, nodes_in_group):
             rows.append("{}: No repo".format('pillars'))
             diff[repo] = rows
     assert fail_counter == 0, \
-        "Several problems found: {1}".format(
+        "Several problems found: {0}".format(
             json.dumps(diff, indent=4))
     if fail_counter == 0 and len(diff) > 0:
         print "\nWarning: nodes contain more repos than reclass"

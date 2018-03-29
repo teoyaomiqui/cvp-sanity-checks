@@ -62,5 +62,5 @@ def test_mtu(local_salt_client, nodes_in_group):
             row.insert(0, interf)
             mtu_data.append(row)
     assert len(mtu_data) == 0, \
-        "Several problems found: {1}".format(
+        "Several problems found: {0}".format(
         json.dumps(mtu_data, indent=4))

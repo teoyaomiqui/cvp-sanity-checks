@@ -38,7 +38,7 @@ def test_check_package_versions(local_salt_client, nodes_in_group):
             row.insert(0, deb)
             pkts_data.append(row)
     assert len(pkts_data) <= 1, \
-        "Several problems found: {1}".format(
+        "Several problems found: {0}".format(
         json.dumps(pkts_data, indent=4))
 
 
@@ -52,6 +52,7 @@ def test_check_module_versions(local_salt_client, nodes_in_group):
     output = local_salt_client.cmd("L@"+','.join(nodes_in_group), 'pip.freeze', expr_form='compound')
 
     nodes = []
+
     pkts_data = []
     my_set = set()
 
@@ -74,5 +75,5 @@ def test_check_module_versions(local_salt_client, nodes_in_group):
             row.insert(0, deb)
             pkts_data.append(row)
     assert len(pkts_data) <= 1, \
-        "Several problems found: {1}".format(
+        "Several problems found: {0}".format(
         json.dumps(pkts_data, indent=4))

@@ -32,5 +32,5 @@ def test_check_services(local_salt_client, nodes_in_group):
             row.insert(0, srv)
             pkts_data.append(row)
     assert len(pkts_data) <= 1, \
-        "Several problems found: {1}".format(
+        "Several problems found: {0}".format(
         json.dumps(pkts_data, indent=4))
