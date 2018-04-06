@@ -34,13 +34,12 @@ def test_ui_kibana(local_salt_client):
 
 
 def test_ui_prometheus(local_salt_client):
-    pytest.skip("This test doesn't work. Skipped")
-    IP = utils.get_monitoring_ip('keepalived_prometheus_vip_address')
+    IP = utils.get_monitoring_ip('stacklight_monitor_address')
     result = local_salt_client.cmd(
         'keystone:server',
         'cmd.run',
-        ['curl http://{}:15010/ 2>&1 | \
-         grep loading'.format(IP)],
+        ['curl http://{}:15010/graph 2>&1 | \
+         grep Prometheus'.format(IP)],
         expr_form='pillar')
     assert len(result[result.keys()[0]]) != 0, \
         'Prometheus page is not reachable on {} from ctl nodes'.format(IP)
