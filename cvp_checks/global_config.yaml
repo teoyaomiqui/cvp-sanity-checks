@@ -6,10 +6,12 @@
 # Can be found on cfg* node using
 # "salt-call pillar.get _param:salt_master_host"
 # and "salt-call pillar.get _param:salt_master_port"
+# or "salt-call pillar.get _param:jenkins_salt_api_url"
 # SALT_USERNAME by default: salt
 # It can be verified with "salt-call shadow.info salt"
 # SALT_PASSWORD you can find on cfg* node using
-# "grep -r salt_api_password /srv/salt/reclass/classes"
+# "salt-call pillar.get _param:salt_api_password"
+# or "grep -r salt_api_password /srv/salt/reclass/classes"
 SALT_URL: <salt_url>
 SALT_USERNAME: <salt_usr>
 SALT_PASSWORD: <salt_pwd>
@@ -45,4 +47,4 @@ test_mtu:
 # this test may skip specific node (use fqdn)
 test_ntp_sync:
   { #"skipped_nodes": [""],
-    "time_deviation": 5}
+    "time_deviation": 1}

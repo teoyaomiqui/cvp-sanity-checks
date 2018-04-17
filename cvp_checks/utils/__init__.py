@@ -2,6 +2,7 @@ import os
 import yaml
 import requests
 import re
+import sys, traceback
 
 
 class salt_remote:
@@ -16,16 +17,22 @@ class salt_remote:
         if param:
             accept_key_payload['arg'] = param
 
-        login_request = requests.post(os.path.join(config['SALT_URL'],
-                                                   'login'),
-                                      headers=headers, data=login_payload)
-        if login_request.ok:
-            request = requests.post(config['SALT_URL'], headers=headers,
-                                    data=accept_key_payload,
-                                    cookies=login_request.cookies)
-            return request.json()['return'][0]
-        else:
-            raise EnvironmentError("401 Not authorized.")
+        try:
+            login_request = requests.post(os.path.join(config['SALT_URL'],
+                                                       'login'),
+                                          headers=headers, data=login_payload)
+            if login_request.ok:
+                request = requests.post(config['SALT_URL'], headers=headers,
+                                        data=accept_key_payload,
+                                        cookies=login_request.cookies)
+                return request.json()['return'][0]
+        except Exception:
+            print "\033[91m\nConnection to SaltMaster " \
+                  "was not established.\n" \
+                  "Please make sure that you " \
+                  "provided correct credentials.\033[0m\n"
+            traceback.print_exc(file=sys.stdout)
+            sys.exit()
 
 
 def init_salt_client():
