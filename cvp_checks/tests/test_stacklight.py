@@ -124,3 +124,15 @@ def test_stacklight_containers_status(local_salt_client):
     assert 'NOT OK' not in result.values(), \
         '''Some containers are in incorrect state:
               {}'''.format(json.dumps(result, indent=4))
+
+
+def test_running_telegraf_services(local_salt_client):
+    salt_output = local_salt_client.cmd('telegraf:agent',
+                                        'service.status',
+                                        'telegraf',
+                                        expr_form='pillar')
+    result = [{node: status} for node, status
+              in salt_output.items()
+              if status is False]
+    assert result == [], 'Telegraf service is not running ' \
+                         'on following nodes:'.format(result)
