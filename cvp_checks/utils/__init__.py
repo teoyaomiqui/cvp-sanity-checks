@@ -101,7 +101,7 @@ def calculate_groups():
         if node_name in skipped_groups:
             continue
         if expr_form == 'pcre':
-            nodes = local_salt_client.cmd(node_name,
+            nodes = local_salt_client.cmd('{}[0-9]{{1,3}}'.format(node_name),
                                           'test.ping',
                                           expr_form=expr_form)
         else:
