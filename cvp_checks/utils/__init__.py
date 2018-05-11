@@ -96,6 +96,13 @@ def calculate_groups():
                 nodes_names.add(node)
         expr_form = 'pcre'
 
+    gluster_nodes = local_salt_client.cmd('I@salt:control and '
+                                          'I@glusterfs:server',
+                                          'test.ping', expr_form='compound')
+    kvm_nodes = local_salt_client.cmd('I@salt:control and not '
+                                      'I@glusterfs:server',
+                                      'test.ping', expr_form='compound')
+
     for node_name in nodes_names:
         skipped_groups = config.get('skipped_groups') or []
         if node_name in skipped_groups:
@@ -108,7 +115,14 @@ def calculate_groups():
             nodes = local_salt_client.cmd(config['groups'][node_name],
                                           'test.ping',
                                           expr_form=expr_form)
-        node_groups[node_name]=[x for x in nodes if x not in config['skipped_nodes']]
+        node_groups[node_name]=[x for x in nodes
+                                if x not in config['skipped_nodes']
+                                if x not in gluster_nodes.keys()
+                                if x not in kvm_nodes.keys()]
+        if node_groups[node_name] == []:
+            del node_groups[node_name]
+            node_groups['kvm'] = kvm_nodes.keys()
+            node_groups['kvm_gluster'] = gluster_nodes.keys()
     return node_groups
                 
             
