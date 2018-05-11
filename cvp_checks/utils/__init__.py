@@ -83,12 +83,12 @@ def calculate_groups():
     node_groups = {}
     nodes_names = set ()
     expr_form = ''
+    all_nodes = set(local_salt_client.cmd('*', 'test.ping'))
     if 'groups' in config.keys():
         nodes_names.update(config['groups'].keys())
-        expr_form = 'pillar'
+        expr_form = 'compound'
     else:
-        nodes = local_salt_client.cmd('*', 'test.ping')
-        for node in nodes:
+        for node in all_nodes:
             index = re.search('[0-9]{1,3}$', node.split('.')[0])
             if index:
                 nodes_names.add(node.split('.')[0][:-len(index.group(0))])
@@ -115,14 +115,21 @@ def calculate_groups():
             nodes = local_salt_client.cmd(config['groups'][node_name],
                                           'test.ping',
                                           expr_form=expr_form)
+            if nodes == {}:
+                continue
+
         node_groups[node_name]=[x for x in nodes
                                 if x not in config['skipped_nodes']
                                 if x not in gluster_nodes.keys()
                                 if x not in kvm_nodes.keys()]
+        all_nodes = set(all_nodes - set(node_groups[node_name]))
         if node_groups[node_name] == []:
             del node_groups[node_name]
             node_groups['kvm'] = kvm_nodes.keys()
             node_groups['kvm_gluster'] = gluster_nodes.keys()
+    all_nodes = set(all_nodes - set(kvm_nodes.keys()))
+    all_nodes = set(all_nodes - set(gluster_nodes.keys()))
+    print ("These nodes will not be verified {0}.".format(all_nodes))
     return node_groups
                 
             

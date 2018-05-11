@@ -34,7 +34,30 @@ skipped_groups: [""]
 # Groups can be defined using pillars.
 # Uncomment this section to enable this.
 # Otherwise groups will be discovered automaticaly
-#groups: {cmp: 'nova:compute'}
+# Tips:
+# 1) you don't need to separate kvm and kvm_glusterfs nodes
+# 2) Use I@pillar or mask like ctl* for targetting nodes
+
+#groups: {
+#         cmp: 'I@nova:compute',
+#         ctl: 'I@keystone:server',
+#         msg: 'I@rabbitmq:server',
+#         dbs: 'I@galera:*',
+#         prx: 'I@nginx:server',
+#         mon: 'I@prometheus:server and not I@influxdb:server',
+#         log: 'I@kibana:server',
+#         mtr: 'I@influxdb:server',
+#         kvm: 'I@salt:control',
+#         cid: 'I@docker:host and not I@prometheus:server and not I@kubernetes:*',
+#         ntw: 'I@opencontrail:database',
+#         ceph_mon: 'I@ceph:mon',
+#         ceph_osd: 'I@ceph:osd',
+#         k8-ctl: 'I@etcd:server',
+#         k8-cmp: 'I@kubernetes:* and not I@etcd:*',
+#         k8-fake: 'I@ku:*',
+#         cfg: 'I@salt:master',
+#         gtw: 'I@neutron:gateway'
+#}
 
 # mtu test setting
 # this test may skip groups (see example)
