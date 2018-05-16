@@ -22,6 +22,7 @@ def test_ceph_pg_count(local_salt_client):
     pg_num and pgp_num should be the same and 
     set according formula to higher value of powered 2
     """
+    
     ceph_monitors = local_salt_client.cmd(
         'ceph:mon', 
         'test.ping', 
