@@ -17,6 +17,9 @@ def test_ceph_tell_bench(local_salt_client):
         'test.ping', 
         expr_form='pillar')
 
+    if not ceph_monitors:
+        pytest.skip("Ceph is not found on this environment")
+
     cmd_result = local_salt_client.cmd(
         ceph_monitors.keys()[0], 
         'cmd.run', ["ceph tell osd.* bench -f json"], 

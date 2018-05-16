@@ -13,6 +13,9 @@ def test_ceph_replicas(local_salt_client):
         'test.ping', 
         expr_form='pillar')
 
+    if not ceph_monitors:
+        pytest.skip("Ceph is not found on this environment")
+
     monitor = ceph_monitors.keys()[0]
 
     raw_pool_replicas = local_salt_client.cmd(

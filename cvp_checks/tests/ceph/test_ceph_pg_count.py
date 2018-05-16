@@ -27,6 +27,9 @@ def test_ceph_pg_count(local_salt_client):
         'ceph:mon', 
         'test.ping', 
         expr_form='pillar')
+    
+    if not ceph_monitors:
+        pytest.skip("Ceph is not found on this environment")
 
     monitor = ceph_monitors.keys()[0]
     pools = local_salt_client.cmd(
