@@ -84,7 +84,8 @@ def calculate_groups():
     nodes_names = set ()
     expr_form = ''
     all_nodes = set(local_salt_client.cmd('*', 'test.ping'))
-    if 'groups' in config.keys():
+    if 'groups' in config.keys() and 'PB_GROUPS' in os.environ.keys() and \
+       os.environ['PB_GROUPS'].lower() != 'false':
         nodes_names.update(config['groups'].keys())
         expr_form = 'compound'
     else:
@@ -129,7 +130,8 @@ def calculate_groups():
             node_groups['kvm_gluster'] = gluster_nodes.keys()
     all_nodes = set(all_nodes - set(kvm_nodes.keys()))
     all_nodes = set(all_nodes - set(gluster_nodes.keys()))
-    print ("These nodes will not be verified {0}.".format(all_nodes))
+    if all_nodes:
+        print ("These nodes were not collected {0}. Check config (groups section)".format(all_nodes))
     return node_groups
                 
             
