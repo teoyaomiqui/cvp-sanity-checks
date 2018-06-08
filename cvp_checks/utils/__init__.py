@@ -126,7 +126,8 @@ def calculate_groups():
         all_nodes = set(all_nodes - set(node_groups[node_name]))
         if node_groups[node_name] == []:
             del node_groups[node_name]
-            node_groups['kvm'] = kvm_nodes.keys()
+            if kvm_nodes:
+                node_groups['kvm'] = kvm_nodes.keys()
             node_groups['kvm_gluster'] = gluster_nodes.keys()
     all_nodes = set(all_nodes - set(kvm_nodes.keys()))
     all_nodes = set(all_nodes - set(gluster_nodes.keys()))
