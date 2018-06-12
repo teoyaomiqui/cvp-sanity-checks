@@ -10,8 +10,10 @@ def test_oss_status(local_salt_client):
         ['haproxy:proxy:listen:stats:binds:address'],
         expr_form='pillar')
     HAPROXY_STATS_IP = [node for node in result if result[node]]
+    proxies = {"http": None, "https": None}
     csv_result = requests.get('http://{}:9600/haproxy?stats;csv"'.format(
-                              result[HAPROXY_STATS_IP[0]])).content
+                              result[HAPROXY_STATS_IP[0]]),
+                              proxies=proxies).content
     data = csv_result.lstrip('# ')
     wrong_data = []
     list_of_services = ['aptly', 'openldap', 'gerrit', 'jenkins', 'postgresql',

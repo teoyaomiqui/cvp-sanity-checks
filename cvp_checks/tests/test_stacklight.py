@@ -10,11 +10,14 @@ def test_elasticsearch_cluster(local_salt_client):
         'pillar.get',
         ['_param:haproxy_elasticsearch_bind_host'],
         expr_form='pillar')
+    proxies = {"http": None, "https": None}
     for node in salt_output.keys():
         IP = salt_output[node]
-        assert requests.get('http://{}:9200/'.format(IP)).status_code == 200, \
+        assert requests.get('http://{}:9200/'.format(IP),
+                            proxies=proxies).status_code == 200, \
             'Cannot check elasticsearch url on {}.'.format(IP)
-        resp = requests.get('http://{}:9200/_cat/health'.format(IP)).content
+        resp = requests.get('http://{}:9200/_cat/health'.format(IP),
+                            proxies=proxies).content
         assert resp.split()[3] == 'green', \
             'elasticsearch status is not good {}'.format(
             json.dumps(resp, indent=4))
@@ -42,8 +45,10 @@ def test_elasticsearch_node_count(local_salt_client):
         ['_param:haproxy_elasticsearch_bind_host'],
         expr_form='pillar')
     IP = salt_output.values()[0]
+    proxies = {"http": None, "https": None}
     resp = json.loads(requests.post('http://{0}:9200/log-{1}/_search?pretty'.
                                     format(IP, today),
+                                    proxies=proxies,
                                     data='{"size": 0, "aggs": '
                                          '{"uniq_hostname": '
                                          '{"terms": {"size": 500, '
