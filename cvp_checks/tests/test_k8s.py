@@ -41,7 +41,7 @@ def test_k8s_get_nodes_status(local_salt_client):
             if 'STATUS' in line or 'proto' in line:
                 continue
             else:
-                if 'Ready' not in line:
+                if 'Ready' != line.split()[1]:
                     errors.append(line)
         break
     assert not errors, 'k8s is not healthy: {}'.format(json.dumps(

@@ -2,11 +2,14 @@ import os
 import yaml
 import requests
 import re
+import sys, traceback
 
 
 class salt_remote:
     def cmd(self, tgt, fun, param=None, expr_form=None, tgt_type=None):
         config = get_configuration()
+        url = config['SALT_URL']
+        proxies = {"http": None, "https": None}
         headers = {'Accept': 'application/json'}
         login_payload = {'username': config['SALT_USERNAME'],
                          'password': config['SALT_PASSWORD'], 'eauth': 'pam'}
@@ -16,16 +19,23 @@ class salt_remote:
         if param:
             accept_key_payload['arg'] = param
 
-        login_request = requests.post(os.path.join(config['SALT_URL'],
-                                                   'login'),
-                                      headers=headers, data=login_payload)
-        if login_request.ok:
-            request = requests.post(config['SALT_URL'], headers=headers,
-                                    data=accept_key_payload,
-                                    cookies=login_request.cookies)
-            return request.json()['return'][0]
-        else:
-            raise EnvironmentError("401 Not authorized.")
+        try:
+            login_request = requests.post(os.path.join(url, 'login'),
+                                          headers=headers, data=login_payload,
+                                          proxies=proxies)
+            if login_request.ok:
+                request = requests.post(url, headers=headers,
+                                        data=accept_key_payload,
+                                        cookies=login_request.cookies,
+                                        proxies=proxies)
+                return request.json()['return'][0]
+        except Exception:
+            print "\033[91m\nConnection to SaltMaster " \
+                  "was not established.\n" \
+                  "Please make sure that you " \
+                  "provided correct credentials.\033[0m\n"
+            traceback.print_exc(file=sys.stdout)
+            sys.exit()
 
 
 def init_salt_client():
@@ -76,12 +86,13 @@ def calculate_groups():
     node_groups = {}
     nodes_names = set ()
     expr_form = ''
-    if 'groups' in config.keys():
+    all_nodes = set(local_salt_client.cmd('*', 'test.ping'))
+    if 'groups' in config.keys() and 'PB_GROUPS' in os.environ.keys() and \
+       os.environ['PB_GROUPS'].lower() != 'false':
         nodes_names.update(config['groups'].keys())
-        expr_form = 'pillar'
+        expr_form = 'compound'
     else:
-        nodes = local_salt_client.cmd('*', 'test.ping')
-        for node in nodes:
+        for node in all_nodes:
             index = re.search('[0-9]{1,3}$', node.split('.')[0])
             if index:
                 nodes_names.add(node.split('.')[0][:-len(index.group(0))])
@@ -89,19 +100,42 @@ def calculate_groups():
                 nodes_names.add(node)
         expr_form = 'pcre'
 
+    gluster_nodes = local_salt_client.cmd('I@salt:control and '
+                                          'I@glusterfs:server',
+                                          'test.ping', expr_form='compound')
+    kvm_nodes = local_salt_client.cmd('I@salt:control and not '
+                                      'I@glusterfs:server',
+                                      'test.ping', expr_form='compound')
+
     for node_name in nodes_names:
         skipped_groups = config.get('skipped_groups') or []
         if node_name in skipped_groups:
             continue
         if expr_form == 'pcre':
-            nodes = local_salt_client.cmd(node_name,
+            nodes = local_salt_client.cmd('{}[0-9]{{1,3}}'.format(node_name),
                                           'test.ping',
                                           expr_form=expr_form)
         else:
             nodes = local_salt_client.cmd(config['groups'][node_name],
                                           'test.ping',
                                           expr_form=expr_form)
-        node_groups[node_name]=[x for x in nodes if x not in config['skipped_nodes']]
+            if nodes == {}:
+                continue
+
+        node_groups[node_name]=[x for x in nodes
+                                if x not in config['skipped_nodes']
+                                if x not in gluster_nodes.keys()
+                                if x not in kvm_nodes.keys()]
+        all_nodes = set(all_nodes - set(node_groups[node_name]))
+        if node_groups[node_name] == []:
+            del node_groups[node_name]
+            if kvm_nodes:
+                node_groups['kvm'] = kvm_nodes.keys()
+            node_groups['kvm_gluster'] = gluster_nodes.keys()
+    all_nodes = set(all_nodes - set(kvm_nodes.keys()))
+    all_nodes = set(all_nodes - set(gluster_nodes.keys()))
+    if all_nodes:
+        print ("These nodes were not collected {0}. Check config (groups section)".format(all_nodes))
     return node_groups
                 
             

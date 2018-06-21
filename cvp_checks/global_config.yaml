@@ -6,10 +6,12 @@
 # Can be found on cfg* node using
 # "salt-call pillar.get _param:salt_master_host"
 # and "salt-call pillar.get _param:salt_master_port"
+# or "salt-call pillar.get _param:jenkins_salt_api_url"
 # SALT_USERNAME by default: salt
 # It can be verified with "salt-call shadow.info salt"
 # SALT_PASSWORD you can find on cfg* node using
-# "grep -r salt_api_password /srv/salt/reclass/classes"
+# "salt-call pillar.get _param:salt_api_password"
+# or "grep -r salt_api_password /srv/salt/reclass/classes"
 SALT_URL: <salt_url>
 SALT_USERNAME: <salt_usr>
 SALT_PASSWORD: <salt_pwd>
@@ -32,17 +34,39 @@ skipped_groups: [""]
 # Groups can be defined using pillars.
 # Uncomment this section to enable this.
 # Otherwise groups will be discovered automaticaly
-#groups: {cmp: 'nova:compute'}
+# Tips:
+# 1) you don't need to separate kvm and kvm_glusterfs nodes
+# 2) Use I@pillar or mask like ctl* for targetting nodes
+
+groups: {
+         cmp: 'I@nova:compute',
+         ctl: 'I@keystone:server',
+         msg: 'I@rabbitmq:server',
+         dbs: 'I@galera:*',
+         prx: 'I@nginx:server',
+         mon: 'I@prometheus:server and not I@influxdb:server',
+         log: 'I@kibana:server',
+         mtr: 'I@influxdb:server',
+         kvm: 'I@salt:control',
+         cid: 'I@docker:host and not I@prometheus:server and not I@kubernetes:*',
+         ntw: 'I@opencontrail:database',
+         ceph_mon: 'I@ceph:mon',
+         ceph_osd: 'I@ceph:osd',
+         k8-ctl: 'I@etcd:server',
+         k8-cmp: 'I@kubernetes:* and not I@etcd:*',
+         cfg: 'I@salt:master',
+         gtw: 'I@neutron:gateway'
+}
 
 # mtu test setting
 # this test may skip groups (see example)
 test_mtu:
   { #"skipped_groups": ["dbs"]
-    "skipped_ifaces": ["bonding_masters", "lo", "veth", "tap", "cali"]}
+    "skipped_ifaces": ["bonding_masters", "lo", "veth", "tap", "cali", "qv", "qb"]}
 # mask for interfaces to skip
 
 # ntp test setting
 # this test may skip specific node (use fqdn)
 test_ntp_sync:
   { #"skipped_nodes": [""],
-    "time_deviation": 5}
+    "time_deviation": 1}

@@ -1,9 +1,14 @@
+import pytest
+
+
 def test_cinder_services(local_salt_client):
     service_down = local_salt_client.cmd(
-        'keystone:server',
+        'cinder:controller',
         'cmd.run',
         ['. /root/keystonerc; cinder service-list | grep "down\|disabled"'],
         expr_form='pillar')
+    if not service_down:
+        pytest.skip("Cinder is not found on this environment")
     cinder_volume = local_salt_client.cmd(
         'keystone:server',
         'cmd.run',
@@ -12,4 +17,4 @@ def test_cinder_services(local_salt_client):
     assert service_down[service_down.keys()[0]] == '', \
         '''Some cinder services are in wrong state'''
     assert cinder_volume[cinder_volume.keys()[0]] == '1', \
-        '''Some nova services are in wrong state'''
+        '''There are more than 1 host/backend for cinder'''
