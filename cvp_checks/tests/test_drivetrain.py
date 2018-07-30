@@ -7,7 +7,7 @@ import pytest
 
 def test_drivetrain_services_replicas(local_salt_client):
     salt_output = local_salt_client.cmd(
-        'I@docker:host and not I@prometheus:server and not I@kubernetes:*',
+        'I@gerrit:client',
         'cmd.run',
         ['docker service ls'],
         expr_form='compound')
@@ -27,7 +27,7 @@ def test_drivetrain_components_and_versions(local_salt_client):
     if not version or version == '':
         pytest.skip("drivetrain_version is not defined. Skipping")
     salt_output = local_salt_client.cmd(
-        'I@docker:host and not I@prometheus:server and not I@kubernetes:*',
+        'I@gerrit:client',
         'cmd.run',
         ['docker service ls'],
         expr_form='compound')
