@@ -62,7 +62,7 @@ groups: {
 # this test may skip groups (see example)
 test_mtu:
   { #"skipped_groups": ["dbs"]
-    "skipped_ifaces": ["bonding_masters", "lo", "veth", "tap", "cali", "qv", "qb"]}
+    "skipped_ifaces": ["bonding_masters", "lo", "veth", "tap", "cali", "qv", "qb", "br-int", "vxlan"]}
 # mask for interfaces to skip
 
 drivetrain_version: ''

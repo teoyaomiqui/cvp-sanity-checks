@@ -8,7 +8,7 @@ def test_mtu(local_salt_client, nodes_in_group):
     testname = os.path.basename(__file__).split('.')[0]
     config = utils.get_configuration()
     skipped_ifaces = config.get(testname)["skipped_ifaces"] or \
-        ["bonding_masters", "lo", "veth", "tap", "cali"]
+        ["bonding_masters", "lo", "veth", "tap", "cali", "qv", "qb", "br-int", "vxlan"]
     total = {}
     network_info = local_salt_client.cmd(
         "L@"+','.join(nodes_in_group), 'cmd.run', ['ls /sys/class/net/'], expr_form='compound')
