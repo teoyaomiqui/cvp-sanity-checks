@@ -1,21 +1,21 @@
 import pytest
 import json
 
+pytestmark = pytest.mark.usefixtures("contrail")
+
+STATUS_FILTER = r'grep -Pv "(==|^$|Disk|unix|support|boot|\*\*|FOR NODE)"'
+STATUS_COMMAND = "contrail-status"
+
+def get_contrail_status(salt_client, pillar, command, processor):
+    return salt_client.cmd(
+        pillar, 'cmd.run',
+        ['{} | {}'.format(command, processor)],
+        expr_form='pillar'
+    )
 
 def test_contrail_compute_status(local_salt_client):
-    probe = local_salt_client.cmd(
-        'opencontrail:control', 'cmd.run',
-        ['contrail-status | grep -Pv \'(==|^$|Disk|unix|support)\''],
-        expr_form='pillar'
-    )
-    if not probe:
-        pytest.skip("Contrail is not found on this environment")
-
-    cs = local_salt_client.cmd(
-        'nova:compute', 'cmd.run',
-        ['contrail-status | grep -Pv \'(==|^$)\''],
-        expr_form='pillar'
-    )
+    cs = get_contrail_status(local_salt_client, 'nova:compute',
+                             STATUS_COMMAND, STATUS_FILTER)
     broken_services = []
 
     for node in cs:
@@ -38,18 +38,17 @@ def test_contrail_compute_status(local_salt_client):
 
 
 def test_contrail_node_status(local_salt_client):
-    cs = local_salt_client.cmd(
-        'opencontrail:client:analytics_node', 'cmd.run',
-        ['contrail-status | grep -Pv \'(==|^$|Disk|unix|support|boot)\''],
-        expr_form='pillar'
+    command = STATUS_COMMAND
+
+    # TODO: what will be in OpenContrail 5?
+    if pytest.contrail == '4':
+        command = "doctrail all " + command
+    cs = get_contrail_status(local_salt_client,
+                             'opencontrail:client:analytics_node',
+                             command, STATUS_FILTER)
+    cs.update(get_contrail_status(local_salt_client, 'opencontrail:control',
+                                  command, STATUS_FILTER)
     )
-    cs.update(local_salt_client.cmd(
-        'opencontrail:control', 'cmd.run',
-        ['contrail-status | grep -Pv \'(==|^$|Disk|unix|support|boot)\''],
-        expr_form='pillar')
-    )
-    if not cs:
-        pytest.skip("Contrail is not found on this environment")
     broken_services = []
     for node in cs:
         for line in cs[node].split('\n'):
@@ -69,17 +68,9 @@ def test_contrail_node_status(local_salt_client):
 
 
 def test_contrail_vrouter_count(local_salt_client):
-    probe = local_salt_client.cmd(
-        'opencontrail:control', 'cmd.run',
-        ['contrail-status | grep -Pv \'(==|^$|Disk|unix|support)\''],
-        expr_form='pillar'
-    )
-    if not probe:
-        pytest.skip("Contrail is not found on this environment")
-    cs = local_salt_client.cmd(
-        'nova:compute', 'cmd.run', ['contrail-status | grep -Pv \'(==|^$)\''],
-        expr_form='pillar'
-    )
+    cs = get_contrail_status(local_salt_client, 'nova:compute',
+                             STATUS_COMMAND, STATUS_FILTER)
+
     # TODO: what if compute lacks these service unintentionally?
     if not cs:
         pytest.skip("Contrail services were not found on compute nodes")
