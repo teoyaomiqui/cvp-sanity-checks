@@ -12,6 +12,7 @@ def test_ceph_tell_bench(local_salt_client):
     and gives the "bytes_per_sec" speed for each OSD.
 
     """
+    pytest.skip("This test needs redesign. Skipped for now")
     ceph_monitors = local_salt_client.cmd(
         'ceph:mon', 
         'test.ping', 
