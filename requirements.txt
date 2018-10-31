@@ -5,3 +5,6 @@ PyYAML
 nose
 ddt
 testscenarios
+mock
+testresources
+contextlib2
