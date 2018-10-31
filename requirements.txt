@@ -3,3 +3,6 @@ requests
 flake8
 PyYAML
 jenkinsapi
+nose
+ddt
+testscenarios
