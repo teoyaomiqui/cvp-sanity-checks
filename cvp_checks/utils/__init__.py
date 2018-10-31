@@ -100,6 +100,8 @@ def calculate_groups():
             else:
                 nodes_names.add(node)
         expr_form = 'pcre'
+    print ("NODE NAMES ARE: {0}".format(nodes_names))
+     
 
     gluster_nodes = local_salt_client.cmd('I@salt:control and '
                                           'I@glusterfs:server',
@@ -137,6 +139,7 @@ def calculate_groups():
     all_nodes = set(all_nodes - set(gluster_nodes.keys()))
     if all_nodes:
         print ("These nodes were not collected {0}. Check config (groups section)".format(all_nodes))
+    print ("NODE NAMES ARE: {0}".format(nodes_names))
     return node_groups
                 
             
