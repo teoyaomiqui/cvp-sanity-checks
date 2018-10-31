@@ -87,6 +87,7 @@ def calculate_groups():
     nodes_names = set ()
     expr_form = ''
     all_nodes = set(local_salt_client.cmd('*', 'test.ping'))
+    print ("ALL NODES ARE: {0}".format(all_nodes))
     if 'groups' in config.keys() and 'PB_GROUPS' in os.environ.keys() and \
        os.environ['PB_GROUPS'].lower() != 'false':
         nodes_names.update(config['groups'].keys())
