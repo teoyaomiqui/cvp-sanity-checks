@@ -139,7 +139,7 @@ def calculate_groups():
     all_nodes = set(all_nodes - set(gluster_nodes.keys()))
     if all_nodes:
         print ("These nodes were not collected {0}. Check config (groups section)".format(all_nodes))
-    print ("NODE NAMES ARE: {0}".format(nodes_names))
+    print ("NODE GROUPS ARE: {0}".format(nodes_groups))
     return node_groups
                 
             
